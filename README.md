@@ -189,7 +189,7 @@ http://localhost:8080
 7️. Sinkronisasi data API
 
 ```
-http://localhost:8080/fastprintapi
+http://localhost:8080/FastprintAPI
 ```
 
 ---
