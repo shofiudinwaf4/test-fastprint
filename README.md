@@ -1,68 +1,275 @@
-# CodeIgniter 4 Application Starter
+# Fastprint Produk Management (CodeIgniter 4)
 
-## What is CodeIgniter?
+Aplikasi ini dibuat sebagai **technical test Fastprint – Tes Programmer**, menggunakan **CodeIgniter 4**. Sistem berfungsi untuk:
 
-CodeIgniter is a PHP full-stack web framework that is light, fast, flexible and secure.
-More information can be found at the [official site](https://codeigniter.com).
+* Mengambil data produk dari **API Fastprint**
+* Menyimpan data ke database MySQL
+* Menampilkan produk dengan status **"bisa dijual"**
+* Mengelola data produk (CRUD)
 
-This repository holds a composer-installable app starter.
-It has been built from the
-[development repository](https://github.com/codeigniter4/CodeIgniter4).
+---
 
-More information about the plans for version 4 can be found in [CodeIgniter 4](https://forum.codeigniter.com/forumdisplay.php?fid=28) on the forums.
+## Teknologi yang Digunakan
 
-You can read the [user guide](https://codeigniter.com/user_guide/)
-corresponding to the latest version of the framework.
+* PHP 8.x
+* CodeIgniter 4
+* MySQL / MariaDB
+* cURL
+* Bootstrap (UI)
 
-## Installation & updates
+---
 
-`composer create-project codeigniter4/appstarter` then `composer update` whenever
-there is a new release of the framework.
+## Struktur Database
 
-When updating, check the release notes to see if there are any changes you might need to apply
-to your `app` folder. The affected files can be copied or merged from
-`vendor/codeigniter4/framework/app`.
+### 1 Tabel `produk`
 
-## Setup
+| Field       | Type    | Keterangan         |
+| ----------- | ------- | ------------------ |
+| id_produk   | INT     | Primary Key        |
+| nama_produk | VARCHAR | Nama produk        |
+| harga       | INT     | Harga produk       |
+| kategori_id | INT     | Relasi ke kategori |
+| status_id   | INT     | Relasi ke status   |
 
-Copy `env` to `.env` and tailor for your app, specifically the baseURL
-and any database settings.
+### 2 Tabel `kategori`
 
-## Important Change with index.php
+| Field         | Type    | Keterangan    |
+| ------------- | ------- | ------------- |
+| id_kategori   | INT     | Primary Key   |
+| nama_kategori | VARCHAR | Nama kategori |
 
-`index.php` is no longer in the root of the project! It has been moved inside the *public* folder,
-for better security and separation of components.
+### 3 Tabel `status`
 
-This means that you should configure your web server to "point" to your project's *public* folder, and
-not to the project root. A better practice would be to configure a virtual host to point there. A poor practice would be to point your web server to the project root and expect to enter *public/...*, as the rest of your logic and the
-framework are exposed.
+| Field       | Type    | Keterangan  |
+| ----------- | ------- | ----------- |
+| id_status   | INT     | Primary Key |
+| nama_status | VARCHAR | Nama status |
 
-**Please** read the user guide for a better explanation of how CI4 works!
+Relasi:
 
-## Repository Management
+* `produk.kategori_id → kategori.id_kategori`
+* `produk.status_id → status.id_status`
 
-We use GitHub issues, in our main repository, to track **BUGS** and to track approved **DEVELOPMENT** work packages.
-We use our [forum](http://forum.codeigniter.com) to provide SUPPORT and to discuss
-FEATURE REQUESTS.
+---
 
-This repository is a "distribution" one, built by our release preparation script.
-Problems with it can be raised on our forum, or as issues in the main repository.
+## Alur Pengambilan Data API Fastprint
 
-## Server Requirements
+Controller: **FastprintAPI**
 
-PHP version 8.1 or higher is required, with the following extensions installed:
+1. Request awal ke API Fastprint
+2. Ambil `x-credentials-username` dari header response
+3. Ambil `Date` dari server response
+4. Generate password:
 
-- [intl](http://php.net/manual/en/intl.requirements.php)
-- [mbstring](http://php.net/manual/en/mbstring.installation.php)
+```
+md5("bisacoding-DD-MM-YY")
+```
 
-> [!WARNING]
-> - The end of life date for PHP 7.4 was November 28, 2022.
-> - The end of life date for PHP 8.0 was November 26, 2023.
-> - If you are still using PHP 7.4 or 8.0, you should upgrade immediately.
-> - The end of life date for PHP 8.1 will be December 31, 2025.
+5. Request ulang ke API dengan username & password valid
+6. Data JSON diterima
+7. Data disimpan ke database:
 
-Additionally, make sure that the following extensions are enabled in your PHP:
+   * Kategori disimpan (jika belum ada)
+   * Status disimpan (jika belum ada)
+   * Produk disimpan dan direlasikan
 
-- json (enabled by default - don't turn it off)
-- [mysqlnd](http://php.net/manual/en/mysqlnd.install.php) if you plan to use MySQL
-- [libcurl](http://php.net/manual/en/curl.requirements.php) if you plan to use the HTTP\CURLRequest library
+Jika sukses, API mengembalikan:
+
+```json
+{
+  "message": "Data berhasil disimpan",
+  "total": 100
+}
+```
+
+---
+
+## Controller Utama
+
+### FastprintAPI Controller
+
+Fungsi utama:
+
+* Mengambil data dari API Fastprint
+* Menyimpan data ke database
+* Menangani autentikasi API berbasis tanggal server
+
+Endpoint:
+
+```
+GET /fastprintapi
+```
+
+---
+
+### ProdukController
+
+Fungsi:
+
+* Menampilkan produk (status: **bisa dijual**)
+* CRUD produk
+* Validasi form input
+
+#### Method yang tersedia:
+
+| Method | Fungsi                  |
+| ------ | ----------------------- |
+| index  | List produk bisa dijual |
+| create | Form tambah produk      |
+| store  | Simpan produk           |
+| edit   | Form edit produk        |
+| update | Update produk           |
+| delete | Hapus produk            |
+
+Filter utama:
+
+```
+WHERE status.nama_status = 'bisa dijual'
+```
+
+---
+
+## Fitur Aplikasi
+
+1. Sinkronisasi API Fastprint
+
+2. CRUD Produk
+
+3. Relasi kategori & status
+
+4. Validasi input form
+
+5. Filter produk "bisa dijual"
+
+6. UI Bootstrap
+
+---
+
+## Cara Menjalankan Aplikasi
+
+1️. Clone repository
+
+```bash
+git clone <repository-url>
+```
+
+2️. Install dependency
+
+```bash
+composer install
+```
+
+3️. Konfigurasi database di `.env`
+
+```env
+database.default.hostname = localhost
+database.default.database = fastprint
+database.default.username = root
+database.default.password =
+```
+
+4️. Jalankan migration
+
+```bash
+php spark migrate
+```
+
+5️. Jalankan server
+
+```bash
+php spark serve
+```
+
+6️. Akses browser
+
+```
+http://localhost:8080
+```
+
+7️. Sinkronisasi data API
+
+```
+http://localhost:8080/fastprintapi
+```
+
+---
+
+## Author
+
+**Nama:** Ahmad Shofiudin Firdani Wafa
+
+**Posisi:** Fullstack Web Developer
+
+**Framework:** CodeIgniter 4
+
+---
+
+## Arsitektur Aplikasi (MVC Flow)
+
+Alur kerja aplikasi mengikuti konsep **MVC (Model – View – Controller)** pada CodeIgniter 4:
+
+1. **Controller**
+
+   * `FastprintAPI`
+
+     * Mengakses API Fastprint
+     * Mengelola autentikasi berbasis tanggal server
+     * Menyimpan data ke database
+   * `ProdukController`
+
+     * Mengelola CRUD produk
+     * Melakukan filter produk dengan status *bisa dijual*
+
+2. **Model**
+
+   * `ProdukModel`
+   * `KategoriModel`
+   * `StatusModel`
+
+   Bertanggung jawab terhadap query database dan relasi antar tabel.
+
+3. **View**
+
+   * Menampilkan data produk
+   * Form tambah & edit produk
+   * Menggunakan Bootstrap untuk tampilan
+
+Alur singkat:
+
+```
+Request → Controller → Model → Database
+                   ↓
+                 View
+```
+
+---
+
+## Database Seeder / SQL Sample
+
+Berikut contoh SQL awal (opsional) untuk memastikan tabel tersedia:
+
+```sql
+INSERT INTO status (nama_status) VALUES
+('bisa dijual'),
+('tidak dijual');
+
+INSERT INTO kategori (nama_kategori) VALUES
+('Elektronik'),
+('ATK'),
+('Aksesoris');
+```
+
+Seeder ini bersifat opsional karena data utama akan otomatis terisi dari API Fastprint.
+
+---
+
+## Penutup
+
+Aplikasi ini dibuat khusus untuk memenuhi kebutuhan **Tes Teknis Programmer Fastprint**, dengan fokus pada:
+
+* Implementasi API sesuai dokumentasi
+* Struktur database ter-normalisasi
+* Clean code dan MVC pattern
+* Kesiapan untuk dikembangkan lebih lanjut
+
+Terima kasih atas kesempatannya
