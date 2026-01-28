@@ -13,7 +13,7 @@ Aplikasi ini dibuat sebagai **technical test Fastprint – Tes Programmer**, men
 
 * PHP 8.x
 * CodeIgniter 4
-* MySQL / MariaDB
+* MySQL
 * cURL
 * Bootstrap (UI)
 
